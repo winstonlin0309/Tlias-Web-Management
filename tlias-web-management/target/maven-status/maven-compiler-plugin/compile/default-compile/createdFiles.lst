@@ -1,0 +1,7 @@
+com\project\pojo\Result.class
+com\project\mapper\DeptMapper.class
+com\project\service\DeptService.class
+com\project\service\impl\DeptServiceImpl.class
+com\project\pojo\Dept.class
+com\project\TliasWebManagementApplication.class
+com\project\controller\DeptController.class

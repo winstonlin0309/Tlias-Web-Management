@@ -22,6 +22,7 @@ public class Emp {
     private LocalDateTime createTime; //创建时间
     private LocalDateTime updateTime; //修改时间
 
+    private List<EmpExpr> exprList;
     //封装部门名称
     private String deptName;
 }

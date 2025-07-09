@@ -2,8 +2,7 @@ package com.project.mapper;
 
 import com.project.pojo.Emp;
 import com.project.pojo.EmpQueryParam;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -32,4 +31,25 @@ public interface EmpMapper {
      * 条件查询分页列表
      */
     public List<Emp> list(EmpQueryParam queryParam);
+
+
+    /**
+     * 新增员工基本信息
+     */
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    @Insert("insert into emp(username, password, name, gender, phone, job, salary, image, entry_date, dept_id, create_time, update_time)" +
+            "values (#{username}, #{password}, #{name}, #{gender}, #{phone}, #{job}, #{salary}, #{image}, #{entryDate}, #{deptId}, #{createTime}, #{updateTime})")
+    void insert(Emp emp);
+
+
+    void deleteByIds(List<Integer> ids);
+
+    @Select("select * from emp where id = #{id}")
+    Emp getById(Integer id);
+
+
+    void updateById(Emp emp);
+
+    @Select("SELECT id, username, name FROM emp WHERE username = #{username} AND password = #{password}")
+    Emp selectByUsernameAndPassword(Emp emp);
 }

@@ -1,5 +1,6 @@
 package com.project.filter;
 
+import com.project.utils.CurrentHolder;
 import com.project.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
@@ -11,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 
 @Slf4j
-@WebFilter
+@WebFilter(urlPatterns = "/*")
 public class TokenFilter implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -41,8 +42,11 @@ public class TokenFilter implements Filter {
 
         //5. 如果token存在, 校验token, 校验失败则返回 401
         try {
+            //这里如果有人篡改了 token的头或者payload, 那么他就会解析失败, 直接报错, 就会被这里的try-catch到
             Claims claims = JwtUtils.parseToken(token);
-
+            Integer empId = Integer.valueOf(claims.get("id").toString());
+            CurrentHolder.setCurrentId(empId);
+            log.info("当前登入员工ID: {}, 将其存入ThreadLocal", empId);
         } catch (Exception e) {
             log.info("令牌非法, 响应401");
             response.setStatus(401);
@@ -51,5 +55,8 @@ public class TokenFilter implements Filter {
         //6. 校验通过 放行
         log.info("令牌合法, 放行");
         filterChain.doFilter(request, response);
+
+        //7. 放行之后, 删除ThreadLocal中的数据
+        CurrentHolder.remove();
     }
 }

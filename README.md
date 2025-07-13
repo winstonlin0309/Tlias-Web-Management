@@ -77,6 +77,64 @@
   - Secret
     - base64(header) + base64(payload) + 自己给定的秘钥
 
+# Filter
+- 由JavaEE提供的
+- 启动Filter需要两个步骤:
+  1. 在启动类添加 @ServletComponentScan 这个是启动传统web开发的组件
+  2. 自定义Filter类必须添加@WebFilter, 并且implements Filter
+  - 注意: Filter不属于SpringMVC组件, 它是属于JAVAEE的
+- Filter接口有三个方法:
+  - init
+    - 初始方法, web服务器启动的时候执行, 只执行异常
+    - 通常做资源的启动工作
+  - doFilter(重点)
+    - 拦截到请求之后执行
+  - destroy
+    - 销毁方法, Web服务器关闭的时候执行, 只执行一次
+    - 通常做资源的释放工作
+- 重点:
+  - 放行之后, 它会运行, 然后获得资源, 之后发送回前端之前, 他还会回到Filter中
+  - 回到Filter后, 他不会重头执行, 而是只是执行放行之后的代码
+  - ![filter.png](readme_imgs%2Ffilter.png)
+  - 多个过滤器:
+    - ![img.png](readme_imgs/filter_chain.png)
+    - 多个过滤器如何确认哪个过滤器先执行:
+    - 默认按照过滤器从小到大(a-z)的类名
+
+# 拦截器 Interceptor
+- 由Spring框架提供的, 是一种动态拦截方法调用的机制
+- 拦截器需要继承HandlerInterceptor接口
+  - 有三个方法:
+    - preHandle() : return true/false
+      - 目标资源方法前执行(有点像doFilter) 
+        - true 放行, false不放行
+    - postHandle()
+      - 目标资源方法执行后 会执行
+      - 有点像filter中的放行之后, 拿到资源, 又会回到Filter执行放行之后的代码
+    -afterCompletion()
+      - 视图渲染后执行, 最后执行,( 这个之前是给前后端不分离的时候用的, 现在应该没什么用)
+- 如何使用:
+  1. 定义拦截器: 创建一个类继承HanlderInterceptor接口, 并且实现所有方法
+  2. 注册拦截器: 需要定义一个配置类, 让SpringMVC启动这个拦截器
+     -![img.png](readme_imgs/interceptor.png)
+- 拦截路劲:
+  - ![interceptor_path.png](readme_imgs%2Finterceptor_path.png)
+
+# Filter + 拦截器
+![img.png](readme_imgs/filter_interceptor.png)
+
+
+# ThreadLocal
+- ThreadLocal并不是一个Thread, 而是Thread的局部变量
+- ThreadLocal为每个线程提供一份单独的存储空, 具有线程隔离的效果, 不同线程之间不会互相干扰
+- 常用方法:
+  - public void set(T value) 设置当前线程的线程局部变量的值
+  - public T get() 返回当前线程所对应的线程局部变量的值
+  - public void remove() 移除当前变量的局部变量的值
+- 用这个可以在Filter中 放行前拿到Token校验返回的claim, 通过claim可以获取到payload中的用户数据
+  - 注意这个用户数据必须是生成token之前手动设置进去的, 比如可以放入userId 以及username
+- 得到了用户ID之后, 可以放到封装过的ThreadLocal, 也就是CurrentHolder 里面, 然后可以通过AOP调用CUrrentHolder, 就能够知道当前是哪个用户ID在执行操作
+- 之后再Filter放行后, 需要remove, 因为需要释放空间
 
 # Feature
 - 文件上传
@@ -89,18 +147,4 @@
 - 身份认证- 使用JWT实现自定义登入功能
   - 用户登入之后, 后端生成一个TOKEN, 然后返回给前端, 前端会把这个TOKEN保存到cookie里, 这样每次前端发请求都会带着这个TOKEN
   - 后端通过Filter来进行身份校验
-    - 启动Filter需要两个步骤:
-      1. 在启动类添加 @ServletComponentScan 这个是启动传统web开发的组件
-      2. 自定义Filter类必须添加@WebFilter, 并且implements Filter
-    - 注意: Filter不属于SpringMVC组件, 它是属于JAVAEE的
-    - Filter接口有三个方法:
-      - init
-        - 初始方法, web服务器启动的时候执行, 只执行异常
-        - 通常做资源的启动工作
-      - doFilter(重点)
-        - 拦截到请求之后执行
-      - destroy
-        - 销毁方法, Web服务器关闭的时候执行, 只执行一次
-        - 通常做资源的释放工作
-        
-  
+    - 
